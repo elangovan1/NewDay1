@@ -2,7 +2,7 @@
 {
     internal class Ensure
     {
-        internal static void IsValidAphaChar(char input)
+        internal static void IsValidAlphaChar(char input)
         {
             if (!char.IsLetter(input))
                 throw new ArgumentException($"{nameof(input)} is invalid char.");

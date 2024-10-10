@@ -14,7 +14,7 @@ namespace NewDay.DiamondGenerator
         /// <returns></returns>
         public async Task<string> Create(char input)
         {
-            Ensure.IsValidAphaChar(input);
+            Ensure.IsValidAlphaChar(input);
             Ensure.IsEmpty(input);
             Ensure.IsItUpperCase(input);
 
