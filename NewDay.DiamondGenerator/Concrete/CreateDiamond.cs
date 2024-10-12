@@ -1,11 +1,12 @@
-﻿using System.Text;
+﻿using NewDay.DiamondGenerator.Extention;
+using System.Text;
 
 namespace NewDay.DiamondGenerator
 {
     public class CreateDiamond : IDesignGenerator
     {
-        private readonly int _indexOfFirstLetter = 65;
-        private readonly char _firstLetter = 'A';
+        private readonly int _indexOfFirstLetter = 65;        
+        private readonly char _emptyChar = ' ';
 
         /// <summary>
         /// Given a character from the alphabet, print a diamond of its output with that character being the midpoint of the diamond.
@@ -14,9 +15,9 @@ namespace NewDay.DiamondGenerator
         /// <returns></returns>
         public async Task<string> Create(char input)
         {
-            Ensure.IsValidAlphaChar(input);
-            Ensure.IsEmpty(input);
-            Ensure.IsItUpperCase(input);
+            Ensure.IsValidAlphaChar(input, nameof(input));
+            Ensure.IsEmpty(input, nameof(input));
+            Ensure.IsItUpperCase(input, nameof(input));
 
             var result = await GetDiamondPart(input);
 
@@ -32,20 +33,53 @@ namespace NewDay.DiamondGenerator
         {
             var diamond = new StringBuilder();
             int prefixSpaceCount = input - _indexOfFirstLetter;
-                        
-            var alphabet = Enumerable.Range(_firstLetter, Convert.ToInt16(input) % 32).Select(n => (char)n);
 
-            var index = 0;
+            var alphabet = input.GetCharsUpTo();
+                        
+            var index = -1;
+
+            //Get Top layer
+            index = await GetUpperPartOfDiamond(diamond, prefixSpaceCount, alphabet, index);
+
+            //Get bottom layer            
+            index = await GetLowerPartOfDiamond(diamond, prefixSpaceCount, alphabet, index);
+
+            return diamond.ToString();
+        }
+
+        /// <summary>
+        /// Get Top layer
+        /// </summary>
+        /// <param name="diamond"></param>
+        /// <param name="prefixSpaceCount"></param>
+        /// <param name="alphabet"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private async Task<int> GetLowerPartOfDiamond(StringBuilder diamond, int prefixSpaceCount, IEnumerable<char> alphabet, int index)
+        {
+            foreach (var value in alphabet.Take(alphabet.Count() - 1).Reverse())
+            {
+                diamond.Append(await PrintRow(value, --index, prefixSpaceCount));
+            }
+            return index;
+        }
+
+        /// <summary>
+        /// Get bottom layer     
+        /// </summary>
+        /// <param name="diamond"></param>
+        /// <param name="prefixSpaceCount"></param>
+        /// <param name="alphabet"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private async Task<int> GetUpperPartOfDiamond(StringBuilder diamond, int prefixSpaceCount, IEnumerable<char> alphabet, int index)
+        {
             foreach (var value in alphabet)
             {
-                diamond.Append(await PrintRow(value, index++, prefixSpaceCount));
+                diamond.Append(await PrintRow(value, ++index, prefixSpaceCount));
             }
 
-            for (index = prefixSpaceCount - 1; index >= 0; index--)
-            {
-                diamond.Append(await PrintRow(alphabet.ElementAt(index), index, prefixSpaceCount));
-            }
-            return diamond.ToString();
+            return index;
         }
 
         /// <summary>
@@ -57,15 +91,12 @@ namespace NewDay.DiamondGenerator
         /// <returns></returns>
         private async Task<string> PrintRow(char letter, int index, int prefixSpaceCount)
         {
-            var diamond = new StringBuilder();
-            diamond.Append(new string(' ', prefixSpaceCount - index));
-            diamond.Append(letter);
+            var diamond = new StringBuilder();            
+            diamond.Append(letter.ToString().FillPrefixWithSpaces(_emptyChar, prefixSpaceCount - index));
             if (index > 0)
-            {
-                diamond.Append(new string(' ', 2 * index - 1));
-                diamond.Append(letter);
+            {                
+                diamond.Append(letter.ToString().FillPrefixWithSpaces(_emptyChar, 2 * index - 1));
             }
-
             diamond.AppendLine();
 
             return await Task.FromResult(diamond.ToString().TrimEnd());
